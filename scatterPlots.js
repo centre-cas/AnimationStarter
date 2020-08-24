@@ -1,3 +1,5 @@
+
+//get mean of the grades in the array entries
 var getMeanGrade = function(entries)
 {
     return d3.mean(entries,function(entry)
@@ -7,28 +9,52 @@ var getMeanGrade = function(entries)
 }
 
 
-var drawScatter = function(students,target,
+var updateScatter = function(students,target,
               xScale,yScale,xProp,yProp)
 {
+	console.log("updating graph");
+	
+//labels graph with xProp on X axis and yProp on Y axis	
+	setBanner(xProp.toUpperCase() +" vs "+ yProp.toUpperCase());
+	
+//creates a circle for each student with x value taken from xProp and y value 
+	//from yProp 
+	
+    var c = d3.select(target)
+		.select(".graph")
+    	.selectAll("circle")
+    	.data(students);
+	
+	//ENTER  add new stuff
+    	c.enter()
+    		.append("circle");
+	
+	//EXIT  remove old stuff
+		c.exit()
+		.remove();
+	
+	//UPDATE  REDECORATE
+	
+	d3.select(".graph")
+		.selectAll("circle")
+		.transition()
+		.duration(1000)
+	
+    	.attr("cx",function(student)
+    	{
+        	return xScale(getMeanGrade(student[xProp]));    
+    	})
+		.attr("cy",function(student)
+    	{
+        	return yScale(getMeanGrade(student[yProp]));    
+    	})
+    	.attr("r",4);
+	
+		
+	}
 
-    setBanner(xProp.toUpperCase() +" vs "+ yProp.toUpperCase());
-    
-    d3.select(target).select(".graph")
-    .selectAll("circle")
-    .data(students)
-    .enter()
-    .append("circle")
-    .attr("cx",function(student)
-    {
-        return xScale(getMeanGrade(student[xProp]));    
-    })
-    .attr("cy",function(student)
-    {
-        return yScale(getMeanGrade(student[yProp]));    
-    })
-    .attr("r",4);
-}
 
+//removes all the circles from a previous graph drawing
 var clearScatter = function(target)
 {
     d3.select(target)
@@ -37,7 +63,7 @@ var clearScatter = function(target)
         .remove();
 }
 
-
+// draw the axes
 var createAxes = function(screen,margins,graph,
                            target,xScale,yScale)
 {
@@ -56,6 +82,7 @@ var createAxes = function(screen,margins,graph,
         .call(yAxis)
 }
 
+//prepares graph for drawing
 
 var initGraph = function(target,students)
 {
@@ -108,38 +135,42 @@ var initGraph = function(target,students)
 
 }
 
+
+
+//sets up call back functions for the mouse click
+
 var initButtons = function(students,target,xScale,yScale)
 {
     
     d3.select("#fvh")
     .on("click",function()
     {
-        clearScatter(target);
-        drawScatter(students,target,
+        
+        updateScatter(students,target,
               xScale,yScale,"final","homework");
     })
     
     d3.select("#hvq")
     .on("click",function()
     {
-        clearScatter(target);
-        drawScatter(students,target,
+        
+        updateScatter(students,target,
               xScale,yScale,"homework","test");
     })
     
     d3.select("#tvf")
     .on("click",function()
     {
-        clearScatter(target);
-        drawScatter(students,target,
+        //clearScatter(target);
+        updateScatter(students,target,
               xScale,yScale,"test","final");
     })
     
     d3.select("#tvq")
     .on("click",function()
     {
-        clearScatter(target);
-        drawScatter(students,target,
+        //clearScatter(target);
+        updateScatter(students,target,
               xScale,yScale,"test","quizes");
     })
     
@@ -156,7 +187,11 @@ var setBanner = function(msg)
 
 
 
+// read in the data
+
 var penguinPromise = d3.json("classData.json");
+
+//what happens on success or failure
 
 penguinPromise.then(function(penguins)
 {
